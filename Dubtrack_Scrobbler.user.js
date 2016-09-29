@@ -3,8 +3,8 @@
 // @namespace   http://github.com/asukero/Dubtrack_Scrobbler
 // @author      Thomas Fossati
 // @description last.fm scrobbler for dubtrack.fm
-// @include     *://dubtrack.fm/*
-// @include     *://www.dubtrack.fm/*
+// @match       *://dubtrack.fm/*
+// @match      *://www.dubtrack.fm/*
 // @version     1
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
 // @require     https://raw.githubusercontent.com/asukero/Dubtrack_Scrobbler/master/md5.js
@@ -153,6 +153,7 @@ function DubtrackScrobbler(_lastfm) {
         track = track.replace(/[\/\s,:;~-]+$/, ''); // trim trailing white chars and dash
         track = track.replace(/\s*\([^\)]*full\ song\)$/i, ''); // (whatever full song)
         track = track.replace(/\s*(OF+ICIAL\s*)?(LYRIC\s*)?(VIDEO\s*)?/i, ''); // (OFFICIAL)? (MUSIC)? (VIDEO?)
+        track = track.replace(/\|(.*)?/i, ''); // | whatever after
         return {
             artist: artist,
             track: track
