@@ -7,11 +7,9 @@
 // @match        *://www.dubtrack.fm/*
 // @version     1
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
-// @require     https://raw.githubusercontent.com/fxb/javascript-last.fm-api/master/lastfm.api.md5.js
-// @require     http://cdn.rawgit.com/meetselva/attrchange/master/js/attrchange.js
+// @require     https://raw.githubusercontent.com/asukero/Dubtrack_Scrobbler/master/md5.js
 // @run-at      document-end
 // @grant       GM_xmlhttpRequest
-// @grant       GM_registerMenuCommand
 // @icon        https://www.dubtrack.fm/favicon-32x32.png?v=1
 // ==/UserScript==
 
@@ -24,8 +22,8 @@ $(function() {
     }
 
     var lastfm = new LastFM({
-        apiKey: apiKey, //your api key
-        apiSecret: apiSecret, //your api secret
+        apiKey: 'apiKey', //your apiKey
+        apiSecret: 'secret', //your secret
         sk: window.localStorage.getItem("sk")
     });
 
@@ -76,23 +74,24 @@ function parseURL(val) {
 function DubtrackScrobbler(_lastfm) {
     var lastfm = _lastfm;
     var self = this;
-    var currentSong = "";
 
     this.startScrobbling = function() {
         setTimeout(function() {
-            currentSong = $(".currentSong")[0];
-            self.scrobble(currentSong);
+            var currentSong = $(".currentSong");
+            self.scrobble(currentSong[0]);
 
-            // $(currentSong).bind('textchange', function(event, previousText) {
-            //     console.log("[DubtrackScrobbler] Track has changed");
-            //     self.scrobble($(this).val());
-            // });
-
+            var currentSongObserver = new MutationObserver(function(mutations) {
+                self.scrobble(currentSong[0])
+            });
+            currentSongObserver.observe(currentSong[0], {
+                childList: true
+            });
         }, 4000);
     }
+
     this.scrobble = function(currentSong) {
-        var cleanedSong = self.getArtistTrack($(currentSong).html());
-        console.log(cleanedSong);
+        console.log("[DubtrackScrobbler] starts scrobbling : " + currentSong.innerText);
+        var cleanedSong = self.getArtistTrack(currentSong.innerText);
         lastfm.track.updateNowPlaying(cleanedSong, {
             success: function(responseXML) {
                 console.log("[LastFM API] updateNowPlaying sucess");
@@ -102,36 +101,33 @@ function DubtrackScrobbler(_lastfm) {
             }
         });
 
-        var progressBar = $(".progressBg")[0];
-        var firstPercentage = (progressBar.style.width);
+        var progressBar = $(".progressBg");
+        var firstPercentage = progressBar[0].style.width;
         firstPercentage = parseFloat(firstPercentage.substring(0, firstPercentage.length - 1));
-        console.log("First percentage : " + firstPercentage);
-
 
         var isScrobbled = false;
-        $(progressBar).attrchange({
-            trackValues: true,
-            callback: function(e) {
-                var percentage = e.newValue.slice(7); // removes "width: "
-                percentage = parseFloat(percentage.substring(0, percentage.length - 2));
-
-                if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
-                    isScrobbled = true;
-                    console.log("[DubtrackScrobbler] now scrobbling");
-                    lastfm.track.scrobble({
-                        artist: cleanedSong.artist,
-                        track: cleanedSong.track,
-                        timestamp: Math.floor((new Date()).getTime() / 1000)
-                    }, {
-                        success: function(responseXML) {
-                            console.log("[LastFM API] scrobble sucess");
-                        },
-                        error: function(message) {
-                            console.error("[LastFM API] " + message);
-                        }
-                    });
-                }
+        var progressBarObserver = new MutationObserver(function(mutations) {
+            var percentage = progressBar[0].style.width;
+            percentage = parseFloat(percentage.substring(0, percentage.length - 2));
+            if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
+                isScrobbled = true;
+                lastfm.track.scrobble({
+                    artist: cleanedSong.artist,
+                    track: cleanedSong.track,
+                    timestamp: Math.floor((new Date()).getTime() / 1000)
+                }, {
+                    success: function(responseXML) {
+                        console.log("[LastFM API] scrobble sucess");
+                    },
+                    error: function(message) {
+                        console.error("[LastFM API] " + message);
+                    }
+                });
             }
+        });
+
+        progressBarObserver.observe(progressBar[0], {
+            attributes: true
         });
     }
 
@@ -145,10 +141,10 @@ function DubtrackScrobbler(_lastfm) {
             artist = song.substr(0, separator.index);
             track = song.substr(separator.index + separator.length);
         }
-        // Do some cleanup
+        // First cleanup
         artist = artist.replace(/^\s+|\s+$/g, '');
         track = track.replace(/^\s+|\s+$/g, '');
-        // Strip crap
+
         track = track.replace(/\s*\*+\s?\S+\s?\*+$/, ''); // **NEW**
         track = track.replace(/\s*\[[^\]]+\]$/, ''); // [whatever]
         track = track.replace(/\s*\([^\)]*version\)$/i, ''); // (whatever version)
@@ -165,8 +161,6 @@ function DubtrackScrobbler(_lastfm) {
         track = track.replace(/^(|.*\s)'(.*)'(\s.*|)$/, '$2'); // 'Track title'
         track = track.replace(/^[\/\s,:;~-]+/, ''); // trim starting white chars and dash
         track = track.replace(/[\/\s,:;~-]+$/, ''); // trim trailing white chars and dash
-
-        //My regexes
         track = track.replace(/\s*\([^\)]*full\ song\)$/i, ''); // (whatever full song)
         track = track.replace(/\s*(OF+ICIAL\s*)?(LYRIC\s*)?(VIDEO\s*)?/i, ''); // (OFFICIAL)? (MUSIC)? (VIDEO?)
 
@@ -176,7 +170,6 @@ function DubtrackScrobbler(_lastfm) {
         };
 
     }
-
 
     var findSeparators = function(song) {
         var separators = [' -- ', '--', ' - ', ' – ', ' — ', '-', '–', '—', ':', '|', '///'];
@@ -204,23 +197,20 @@ function DubtrackScrobbler(_lastfm) {
 }
 
 function LastFM(options) {
-    /* Set default values for required options. */
+
     var apiKey = options.apiKey || '';
     var apiSecret = options.apiSecret || '';
     var apiUrl = options.apiUrl || 'http://ws.audioscrobbler.com/2.0/';
     var sk = options.sk || null;
 
-    /* Set API key. */
     this.setApiKey = function(_apiKey) {
         apiKey = _apiKey;
     };
 
-    /* Set API key. */
     this.setApiSecret = function(_apiSecret) {
         apiSecret = _apiSecret;
     };
 
-    /* Set API URL. */
     this.setApiUrl = function(_apiUrl) {
         apiUrl = _apiUrl;
     };
@@ -279,13 +269,10 @@ function LastFM(options) {
                     var responseXML = new DOMParser().parseFromString(response.responseText, "text/xml");
                     var lfm = $(responseXML).find("lfm");
                     if (lfm.attr("status") == "ok") {
-                        console.log("status ok");
                         callback.success(responseXML);
                     } else {
                         callback.error(lfm.find("error").text());
                     }
-
-
                 }
             });
         }
