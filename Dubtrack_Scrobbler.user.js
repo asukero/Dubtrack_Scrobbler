@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Dubstrack Scrobbler
+// @name        Dubtrack Scrobbler
 // @namespace   thomas fossati
 // @author      Thomas Fossati
 // @description last.fm scrobbler for dubtrack.fm
