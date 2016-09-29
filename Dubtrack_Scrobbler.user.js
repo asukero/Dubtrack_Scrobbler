@@ -77,22 +77,31 @@ function DubtrackScrobbler(_lastfm) {
 
     this.startScrobbling = function() {
         setTimeout(function() {
-            var currentSong = $(".currentSong");
-            self.scrobble(currentSong[0]);
+            var currentTrack = $(".currentSong");
+            if(currentTrack[0].innerText != "No one is playing"){
+              self.scrobble(currentTrack[0].innerText);
+            }else {
+              console.log("[DubtrackScrobbler] nothing to scrobble for now");
+            }
 
-            var currentSongObserver = new MutationObserver(function(mutations) {
-                self.scrobble(currentSong[0])
+
+            var currentTrackObserver = new MutationObserver(function(mutations) {
+              if(currentTrack[0].innerText != "No one is playing"){
+                self.scrobble(currentTrack[0].innerText);
+              }else {
+                console.log("[DubtrackScrobbler] nothing to scrobble for now");
+              }
             });
-            currentSongObserver.observe(currentSong[0], {
+            currentTrackObserver.observe(currentTrack[0], {
                 childList: true
             });
         }, 4000);
     }
 
-    this.scrobble = function(currentSong) {
-        console.log("[DubtrackScrobbler] starts scrobbling : " + currentSong.innerText);
-        var cleanedSong = self.getArtistTrack(currentSong.innerText);
-        lastfm.track.updateNowPlaying(cleanedSong, {
+    this.scrobble = function(currentTrack) {
+        console.log("[DubtrackScrobbler] starts scrobbling : " + currentTrack);
+        var cleanedTrack = self.getArtistTrack(currentTrack);
+        lastfm.track.updateNowPlaying(cleanedTrack, {
             success: function(responseXML) {
                 console.log("[LastFM API] updateNowPlaying sucess");
             },
@@ -112,8 +121,8 @@ function DubtrackScrobbler(_lastfm) {
             if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
                 isScrobbled = true;
                 lastfm.track.scrobble({
-                    artist: cleanedSong.artist,
-                    track: cleanedSong.track,
+                    artist: cleanedTrack.artist,
+                    track: cleanedTrack.track,
                     timestamp: Math.floor((new Date()).getTime() / 1000)
                 }, {
                     success: function(responseXML) {
