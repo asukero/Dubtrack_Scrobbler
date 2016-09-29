@@ -33,7 +33,7 @@ $(function() {
         console.log("[DubtrackScrobbler] No token found, redirecting to lasfm page");
         lastfm.auth.getToken();
     } else {
-        if (!lastfm.isAuthentized()) {
+        if (!lastfm.isAuthenticated()) {
 
             lastfm.auth.getSession({
                 token: window.localStorage.getItem("token")
@@ -219,7 +219,7 @@ function LastFM(options) {
         sk = _sk;
     }
 
-    this.isAuthentized = function() {
+    this.isAuthenticated = function() {
         return (sk != null);
     }
 
