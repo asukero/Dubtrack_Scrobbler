@@ -134,16 +134,19 @@ function DubtrackScrobbler(_lastfm) {
     }
     
     this.getArtistTrack = function(song) {
-        var separator = findSeparators(song);
-        var artist = null;
-        var track = null;
-        
-        text = text.replace(/^\[[^\]]+\]\s*-*\s*/i, ''); // remove [genre] from the beginning of the title
-        
-        if (separator !== null) {
-            artist = null;
-            track = null;
-        } // First cleanup
+        track = track.replace(/^\[[^\]]+\]\s*-*\s*/i, ''); // remove [genre] from the beginning of the title
+
+        var separator = findSeparators(track);
+
+        if (separator === null || track.length === 0) {
+            return {
+                artist: null,
+                track: null
+            };
+        }
+
+        var artist = track.substr(0, separator.index);
+        var track = track.substr(separator.index + separator.length);
 
         artist = artist.replace(/^\s+|\s+$/g, '');
         track = track.replace(/^\s+|\s+$/g, '');
@@ -167,20 +170,24 @@ function DubtrackScrobbler(_lastfm) {
         track = track.replace(/\s*(OF+ICIAL\s*)?(LYRIC\s*)?(VIDEO\s*)?/i, ''); // (OFFICIAL)? (MUSIC)? (VIDEO?)
         track = track.replace(/\|(.*)?/i, ''); // | whatever after
         track = track.replace(/\s*\([^\)]*lyrics\)$/i, ''); // (whatever lyrics)
-        track = track.replace(/\s*\(*full[^\)]*\)$/i, ''); // (full whatever) 
+        track = track.replace(/\s*\(*full[^\)]*\)$/i, ''); // (full whatever)
+        track = track.replace(/\s*\(*album[^\)]*\)$/i, ''); // (album whatever)
+
         return {
             artist: artist,
             track: track
         };
     }
+    
     var findSeparators = function(song) {
         var separators = [' -- ', '--', ' - ', ' – ', ' — ', '-', '–', '—', ':', '|', '///'];
-        if (song === null || song.length === 0) {
+        if (track === null || track.length === 0) {
             return null;
         }
+
         for (var i in separators) {
             var sep = separators[i];
-            var index = song.indexOf(sep);
+            var index = track.indexOf(sep);
             if (index > -1) {
                 return {
                     index: index,
@@ -188,10 +195,7 @@ function DubtrackScrobbler(_lastfm) {
                 };
             }
         }
-        return {
-            index: song.indexOf(' '),
-            length: 1
-        };
+        return null;
     }
 }
 
