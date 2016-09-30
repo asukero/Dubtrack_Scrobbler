@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name        Dubtrack Scrobbler
 // @namespace   http://github.com/asukero/Dubtrack_Scrobbler
 // @author      Thomas Fossati
@@ -23,7 +23,7 @@ $(function() {
     }
     var lastfm = new LastFM({
         apiKey: 'apiKey', //your apiKey
-        apiSecret: 'secret', //your secret
+        apiSecret: 'apiSecret', //your secret
         sk: window.localStorage.getItem('sk')
     });
     var Dubtrack = new DubtrackScrobbler(lastfm);
@@ -87,11 +87,11 @@ function DubtrackScrobbler(_lastfm) {
         }, 4000);
     }
     this.scrobble = function(currentTrack) {
-        
+
         console.log('[DubtrackScrobbler] starts scrobbling : ' + currentTrack);
         var cleanedTrack = self.getArtistTrack(currentTrack);
-        
-        if(cleanedTrack.artist != null && cleanedTrack.track != null){  
+
+        if(cleanedTrack.artist != null && cleanedTrack.track != null){
             lastfm.track.updateNowPlaying(cleanedTrack, {
                 success: function(responseXML) {
                     console.log('[LastFM API] updateNowPlaying sucess');
@@ -100,12 +100,12 @@ function DubtrackScrobbler(_lastfm) {
                     console.error('[LastFM API] ' + message);
                 }
             });
-        
+
             var progressBar = $('.progressBg');
             var firstPercentage = progressBar[0].style.width;
             firstPercentage = parseFloat(firstPercentage.substring(0, firstPercentage.length - 1));
             var isScrobbled = false;
-            
+
             var progressBarObserver = new MutationObserver(function(mutations) {
                 var percentage = progressBar[0].style.width;
                 percentage = parseFloat(percentage.substring(0, percentage.length - 2));
@@ -132,8 +132,8 @@ function DubtrackScrobbler(_lastfm) {
             console.log("[DubtrackScrobbler] Cannot retrieve artist and track name, skipping track...");
         }
     }
-    
-    this.getArtistTrack = function(song) {
+
+    this.getArtistTrack = function(track) {
         track = track.replace(/^\[[^\]]+\]\s*-*\s*/i, ''); // remove [genre] from the beginning of the title
 
         var separator = findSeparators(track);
@@ -178,8 +178,8 @@ function DubtrackScrobbler(_lastfm) {
             track: track
         };
     }
-    
-    var findSeparators = function(song) {
+
+    var findSeparators = function(track) {
         var separators = [' -- ', '--', ' - ', ' – ', ' — ', '-', '–', '—', ':', '|', '///'];
         if (track === null || track.length === 0) {
             return null;
@@ -303,6 +303,7 @@ function LastFM(options) {
         } /* Get API signature. */
 
         params.api_sig = auth.getApiSignature(params);
+
         /* Call method. */
         internalCall(params, callbacks, requestMethod);
     };
