@@ -169,9 +169,10 @@ function DubtrackScrobbler(_lastfm) {
         track = track.replace(/\s*\([^\)]*full\ song\)$/i, ''); // (whatever full song)
         track = track.replace(/\s*(OF+ICIAL\s*)?(LYRIC\s*)?(VIDEO\s*)?/i, ''); // (OFFICIAL)? (MUSIC)? (VIDEO?)
         track = track.replace(/\|(.*)?/i, ''); // | whatever after
-        track = track.replace(/\s*\([^\)]*lyrics\)$/i, ''); // (whatever lyrics)
-        track = track.replace(/\s*\(*full[^\)]*\)$/i, ''); // (full whatever)
-        track = track.replace(/\s*\(*album[^\)]*\)$/i, ''); // (album whatever)
+        track = track.replace(/\s*\([^\)]*lyric[^\)]*\)$/i, ''); // (whatever lyric whatever)
+        track = track.replace(/\s*\([^\)]*full[^\)]*\)$/i, ''); // (whatever full whatever)
+        track = track.replace(/\s*\([^\)]*album[^\)]*\)$/i, ''); // (whatever album whatever)
+        track = track.replace(/\s*\([^\)]*of+icial[^\)]*\)$/i, ''); // (whatever official whatever)
 
         return {
             artist: artist,
