@@ -39,7 +39,7 @@ $(function() {
                     var sk = responseXML.getElementsByTagName('key')[0].childNodes[0].nodeValue;
                     window.localStorage.setItem('sk', sk);
                     lastfm.setSessionKey(sk);
-                    console.log('[LastFM API] Authentized, starts scrobbling');
+                    console.log('[LastFM API] Authenticated, starts scrobbling');
                     Dubtrack.startScrobbling();
                 },
                 error: function(code, message) {
@@ -47,7 +47,7 @@ $(function() {
                 }
             });
         } else {
-            console.log('[DubtrackScrobbler] Authentized, starts scrobbling');
+            console.log('[DubtrackScrobbler] Authenticated, starts scrobbling');
             Dubtrack.startScrobbling();
         }
     }
