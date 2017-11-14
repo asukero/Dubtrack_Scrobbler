@@ -1,57 +1,57 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name        Dubtrack Scrobbler
 // @namespace   http://github.com/asukero/Dubtrack_Scrobbler
 // @author      Thomas Fossati
 // @description last.fm scrobbler for dubtrack.fm
 // @match       *://dubtrack.fm/*
 // @match      *://www.dubtrack.fm/*
-// @version     1
-// @require     http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
+// @version     2
 // @require     https://raw.githubusercontent.com/asukero/Dubtrack_Scrobbler/master/md5.js
-// @run-at      document-end
-// @grant       GM_xmlhttpRequest
-// @grant       GM_registerMenuCommand
+// @run-at      document-idle
+// @grant       GM.xmlHttpRequest
 // @icon        https://www.dubtrack.fm/favicon-32x32.png?v=1
 // ==/UserScript==
 
-$(function() {
 
-    var token = parseURL('token');
-    if (token != null) {
-        window.localStorage.setItem('token', token);
-        console.log('[DubtrackScrobbler] session token retrieved');
-    }
-    var lastfm = new LastFM({
-        apiKey: 'apiKey', //your apiKey
-        apiSecret: 'apiSecret', //your secret
-        sk: window.localStorage.getItem('sk')
-    });
-    var Dubtrack = new DubtrackScrobbler(lastfm);
-    if (window.localStorage.getItem('token') == null) {
-        console.log('[DubtrackScrobbler] No token found, redirecting to lasfm page');
-        lastfm.auth.getToken();
-    } else {
-        if (!lastfm.isAuthenticated()) {
-            lastfm.auth.getSession({
-                token: window.localStorage.getItem('token')
-            }, {
-                success: function(responseXML) {
-                    var sk = responseXML.getElementsByTagName('key')[0].childNodes[0].nodeValue;
-                    window.localStorage.setItem('sk', sk);
-                    lastfm.setSessionKey(sk);
-                    console.log('[LastFM API] Authenticated, starts scrobbling');
-                    Dubtrack.startScrobbling();
-                },
-                error: function(code, message) {
-                    console.error('[LastFM API] ' + message);
-                }
-            });
-        } else {
-            console.log('[DubtrackScrobbler] Authenticated, starts scrobbling');
-            Dubtrack.startScrobbling();
-        }
-    }
+var token = parseURL('token');
+
+if (token != null) {
+  window.localStorage.setItem('token', token);
+  console.log('[DubtrackScrobbler] session token retrieved');
+}
+
+var lastfm = new LastFM({
+  apiKey: '38457d7816431bc6c5c1a9a97bc2546f',//your apiKey
+  apiSecret: '99309078285edd9ec00feaeb290aa97c',//your secret
+  sk: window.localStorage.getItem('sk')
 });
+
+var Dubtrack = new DubtrackScrobbler(lastfm);
+
+if (window.localStorage.getItem('token') == null) {
+  console.log('[DubtrackScrobbler] No token found, redirecting to lasfm page');
+  lastfm.auth.getToken();
+} else {
+  if (!lastfm.isAuthenticated()) {
+    lastfm.auth.getSession({
+      token: window.localStorage.getItem('token')
+    }, {
+      success: function(responseXML) {
+        var sk = responseXML.getElementsByTagName('key')[0].childNodes[0].nodeValue;
+        window.localStorage.setItem('sk', sk);
+        lastfm.setSessionKey(sk);
+        console.log('[LastFM API] Authenticated, starts scrobbling');
+        Dubtrack.startScrobbling();
+      },
+      error: function(code, message) {
+        console.error('[LastFM API] ' + message);
+      }
+    });
+  } else {
+    console.log('[DubtrackScrobbler] Authenticated, starts scrobbling');
+    Dubtrack.startScrobbling();
+  }
+}
 
 function parseURL(val) {
     var result = null,
@@ -66,22 +66,23 @@ function parseURL(val) {
 function DubtrackScrobbler(_lastfm) {
     var lastfm = _lastfm;
     var self = this;
+
     this.startScrobbling = function() {
         setTimeout(function() {
-            var currentTrack = $('.currentSong');
-            if (currentTrack[0].innerText != 'No one is playing') {
-                self.scrobble(currentTrack[0].innerText);
+            var currentTrack = document.querySelector('.currentSong');
+            if (currentTrack.innerText != 'No one is playing') {
+                self.scrobble(currentTrack.innerText);
             } else {
                 console.log('[DubtrackScrobbler] nothing to scrobble for now');
             }
             var currentTrackObserver = new MutationObserver(function(mutations) {
                 if (currentTrack[0].innerText != 'No one is playing') {
-                    self.scrobble(currentTrack[0].innerText);
+                    self.scrobble(currentTrack.innerText);
                 } else {
                     console.log('[DubtrackScrobbler] nothing to scrobble for now');
                 }
             });
-            currentTrackObserver.observe(currentTrack[0], {
+            currentTrackObserver.observe(currentTrack, {
                 childList: true
             });
         }, 4000);
@@ -101,13 +102,13 @@ function DubtrackScrobbler(_lastfm) {
                 }
             });
 
-            var progressBar = $('.progressBg');
-            var firstPercentage = progressBar[0].style.width;
+            var progressBar = document.querySelector('.progressBg');
+            var firstPercentage = progressBar.style.width;
             firstPercentage = parseFloat(firstPercentage.substring(0, firstPercentage.length - 1));
             var isScrobbled = false;
 
             var progressBarObserver = new MutationObserver(function(mutations) {
-                var percentage = progressBar[0].style.width;
+                var percentage = progressBar.style.width;
                 percentage = parseFloat(percentage.substring(0, percentage.length - 2));
                 if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
                     isScrobbled = true;
@@ -228,7 +229,7 @@ function LastFM(options) {
                     data += '&' + property + '=' + params[property];
                 }
             }
-            GM_xmlhttpRequest({
+            GM.xmlHttpRequest({
                 method: 'POST',
                 url: apiUrl,
                 data: data,
@@ -237,7 +238,7 @@ function LastFM(options) {
                 },
                 onload: function(response) {
                     var responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
-                    var lfm = $(responseXML).find('lfm');
+                    var lfm = responseXML.querySelector('lfm');
                     if (lfm.attr('status') == 'ok') {
                         callback.success(responseXML);
                     } else {
@@ -253,7 +254,7 @@ function LastFM(options) {
                 }
             }
             var requestRUL = apiUrl + data;
-            GM_xmlhttpRequest({
+            GM.xmlHttpRequest({
                 method: 'GET',
                 url: requestRUL,
                 headers: {
@@ -261,7 +262,7 @@ function LastFM(options) {
                 },
                 onload: function(response) {
                     var responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
-                    var lfm = $(responseXML).find('lfm');
+                    var lfm = responseXML.querySelector('lfm');
                     if (lfm.attr('status') == 'ok') {
                         callback.success(responseXML);
                     } else {
@@ -304,7 +305,6 @@ function LastFM(options) {
         } /* Get API signature. */
 
         params.api_sig = auth.getApiSignature(params);
-
         /* Call method. */
         internalCall(params, callbacks, requestMethod);
     };
@@ -338,13 +338,16 @@ function LastFM(options) {
     /* Private auth methods. */
     var auth = {
         getApiSignature: function(params) {
-            var keys = Object.keys(params);
-            var string = '';
+            const keys = Object.keys(params);
+            let string = '';
             keys.sort();
-            keys.forEach(function(key) {
+            for(key of keys){
                 string += key + params[key];
-            });
+            }
             string += apiSecret;
+          	console.log("toto");
+          	console.log(md5(string));
+          	console.log("coucou");
             return md5(string);
         }
     };
