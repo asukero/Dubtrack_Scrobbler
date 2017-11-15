@@ -20,8 +20,8 @@ if (token != null) {
 }
 
 const lastfm = new LastFM({
-  apiKey: '38457d7816431bc6c5c1a9a97bc2546f',//your apiKey
-  apiSecret: '99309078285edd9ec00feaeb290aa97c',//your secret
+  apiKey: "",//your apiKey
+  apiSecret: "", //your secret
   sk: window.localStorage.getItem('sk')
 });
 
