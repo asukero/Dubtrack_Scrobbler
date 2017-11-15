@@ -1,6 +1,5 @@
 // ==UserScript==
 // @name        Dubtrack Scrobbler
-// @namespace   http://github.com/asukero/Dubtrack_Scrobbler
 // @author      Thomas Fossati
 // @description last.fm scrobbler for dubtrack.fm
 // @match       *://dubtrack.fm/*
@@ -13,20 +12,20 @@
 // ==/UserScript==
 
 
-var token = parseURL('token');
+let token = parseURL('token');
 
 if (token != null) {
   window.localStorage.setItem('token', token);
   console.log('[DubtrackScrobbler] session token retrieved');
 }
 
-var lastfm = new LastFM({
+const lastfm = new LastFM({
   apiKey: '38457d7816431bc6c5c1a9a97bc2546f',//your apiKey
   apiSecret: '99309078285edd9ec00feaeb290aa97c',//your secret
   sk: window.localStorage.getItem('sk')
 });
 
-var Dubtrack = new DubtrackScrobbler(lastfm);
+const Dubtrack = new DubtrackScrobbler(lastfm);
 
 if (window.localStorage.getItem('token') == null) {
   console.log('[DubtrackScrobbler] No token found, redirecting to lasfm page');
@@ -37,7 +36,7 @@ if (window.localStorage.getItem('token') == null) {
       token: window.localStorage.getItem('token')
     }, {
       success: function(responseXML) {
-        var sk = responseXML.getElementsByTagName('key')[0].childNodes[0].nodeValue;
+        let sk = responseXML.getElementsByTagName('key')[0].childNodes[0].nodeValue;
         window.localStorage.setItem('sk', sk);
         lastfm.setSessionKey(sk);
         console.log('[LastFM API] Authenticated, starts scrobbling');
@@ -54,7 +53,7 @@ if (window.localStorage.getItem('token') == null) {
 }
 
 function parseURL(val) {
-    var result = null,
+    let result = null,
         tmp = [];
     location.search.substr(1).split('&').forEach(function(item) {
         tmp = item.split('=');
@@ -64,18 +63,18 @@ function parseURL(val) {
 }
 
 function DubtrackScrobbler(_lastfm) {
-    var lastfm = _lastfm;
-    var self = this;
+    const lastfm = _lastfm;
+    const self = this;
 
     this.startScrobbling = function() {
         setTimeout(function() {
-            var currentTrack = document.querySelector('.currentSong');
+            const currentTrack = document.querySelector('.currentSong');
             if (currentTrack.innerText != 'No one is playing') {
                 self.scrobble(currentTrack.innerText);
             } else {
                 console.log('[DubtrackScrobbler] nothing to scrobble for now');
             }
-            var currentTrackObserver = new MutationObserver(function(mutations) {
+            const currentTrackObserver = new MutationObserver(function(mutations) {
                 if (currentTrack[0].innerText != 'No one is playing') {
                     self.scrobble(currentTrack.innerText);
                 } else {
@@ -90,7 +89,7 @@ function DubtrackScrobbler(_lastfm) {
     this.scrobble = function(currentTrack) {
 
         console.log('[DubtrackScrobbler] starts scrobbling : ' + currentTrack);
-        var cleanedTrack = self.getArtistTrack(currentTrack);
+        const cleanedTrack = self.getArtistTrack(currentTrack);
 
         if(cleanedTrack.artist != null && cleanedTrack.track != null){
             lastfm.track.updateNowPlaying(cleanedTrack, {
@@ -102,13 +101,13 @@ function DubtrackScrobbler(_lastfm) {
                 }
             });
 
-            var progressBar = document.querySelector('.progressBg');
-            var firstPercentage = progressBar.style.width;
+            const progressBar = document.querySelector('.progressBg');
+            let firstPercentage = progressBar.style.width;
             firstPercentage = parseFloat(firstPercentage.substring(0, firstPercentage.length - 1));
-            var isScrobbled = false;
+            let isScrobbled = false;
 
-            var progressBarObserver = new MutationObserver(function(mutations) {
-                var percentage = progressBar.style.width;
+            const progressBarObserver = new MutationObserver(function(mutations) {
+                let percentage = progressBar.style.width;
                 percentage = parseFloat(percentage.substring(0, percentage.length - 2));
                 if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
                     isScrobbled = true;
@@ -137,7 +136,7 @@ function DubtrackScrobbler(_lastfm) {
     this.getArtistTrack = function(track) {
         track = track.replace(/^\[[^\]]+\]\s*-*\s*/i, ''); // remove [genre] from the beginning of the title
 
-        var separator = findSeparators(track);
+        const separator = findSeparators(track);
 
         if (separator === null || track.length === 0) {
             return {
@@ -146,7 +145,7 @@ function DubtrackScrobbler(_lastfm) {
             };
         }
 
-        var artist = track.substr(0, separator.index);
+        let artist = track.substr(0, separator.index);
         var track = track.substr(separator.index + separator.length);
 
         artist = artist.replace(/^\s+|\s+$/g, '');
@@ -182,14 +181,14 @@ function DubtrackScrobbler(_lastfm) {
     }
 
     var findSeparators = function(track) {
-        var separators = [' -- ', '--', ' - ', ' – ', ' — ', '-', '–', '—', ':', '|', '///'];
+        const separators = [' -- ', '--', ' - ', ' – ', ' — ', '-', '–', '—', ':', '|', '///'];
         if (track === null || track.length === 0) {
             return null;
         }
 
-        for (var i in separators) {
-            var sep = separators[i];
-            var index = track.indexOf(sep);
+        for (let i in separators) {
+            const sep = separators[i];
+            const index = track.indexOf(sep);
             if (index > -1) {
                 return {
                     index: index,
@@ -223,11 +222,9 @@ function LastFM(options) {
     }
     var internalCall = function(params, callback, requestMethod) {
         if (requestMethod == 'POST') {
-            var data = '';
-            for (var property in params) {
-                if (params.hasOwnProperty(property)) {
-                    data += '&' + property + '=' + params[property];
-                }
+            let data = '';
+            for (let property of params) {
+                data += '&' + property + '=' + params[property];
             }
             GM.xmlHttpRequest({
                 method: 'POST',
@@ -237,8 +234,8 @@ function LastFM(options) {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 onload: function(response) {
-                    var responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
-                    var lfm = responseXML.querySelector('lfm');
+                    const responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
+                    const lfm = responseXML.querySelector('lfm');
                     if (lfm.attr('status') == 'ok') {
                         callback.success(responseXML);
                     } else {
@@ -247,13 +244,11 @@ function LastFM(options) {
                 }
             });
         } else {
-            var data = '?';
-            for (var property in params) {
-                if (params.hasOwnProperty(property)) {
-                    data += '&' + property + '=' + params[property];
-                }
+            let data = '?';
+            for (var property of params) {
+                data += '&' + property + '=' + params[property];
             }
-            var requestRUL = apiUrl + data;
+            const requestRUL = apiUrl + data;
             GM.xmlHttpRequest({
                 method: 'GET',
                 url: requestRUL,
@@ -261,8 +256,8 @@ function LastFM(options) {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 onload: function(response) {
-                    var responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
-                    var lfm = responseXML.querySelector('lfm');
+                    const responseXML = new DOMParser().parseFromString(response.responseText, 'text/xml');
+                    const lfm = responseXML.querySelector('lfm');
                     if (lfm.attr('status') == 'ok') {
                         callback.success(responseXML);
                     } else {
