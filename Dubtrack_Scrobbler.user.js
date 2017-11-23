@@ -108,7 +108,7 @@ function DubtrackScrobbler(_lastfm) {
             var progressBarObserver = new MutationObserver(function(mutations) {
                 let percentage = progressBar.style.width;
                 percentage = parseFloat(percentage.substring(0, percentage.length - 2));
-                if ((percentage > 10 || percentage > firstPercentage + 40) && !isScrobbled) {
+                if ((percentage > 99 || percentage > firstPercentage + 40) && !isScrobbled) {
                     isScrobbled = true;
                     lastfm.track.scrobble({
                         artist: cleanedTrack.artist,
